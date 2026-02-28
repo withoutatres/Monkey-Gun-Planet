@@ -8,7 +8,7 @@ import os
 # Page setup
 # -----------------------------
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
-st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity")
+st.title("🐵 Monkey and Hunter Simulation – Solar System Version")
 
 # -----------------------------
 # Constants
