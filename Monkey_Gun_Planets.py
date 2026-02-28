@@ -31,18 +31,16 @@ width, height = 600, 400
 scale = 25  # pixels per meter
 
 # ----- Load monkey image from URL -----
-# Example: a small transparent PNG hosted online
-monkey_url = "https://i.imgur.com/4AiXzf8.png"  # Replace with your preferred image
-try:
-    resp = urllib.request.urlopen(monkey_url)
-    monkey_img = np.asarray(bytearray(resp.read()), dtype=np.uint8)
-    monkey_img = cv2.imdecode(monkey_img, cv2.IMREAD_UNCHANGED)
-    if monkey_img is not None:
-        monkey_h, monkey_w = monkey_img.shape[:2]
-    else:
-        st.warning("Monkey image could not be loaded.")
-except:
-    st.warning("Monkey image could not be loaded.")
+import os
+
+# ----- Load monkey image from local assets folder -----
+monkey_path = os.path.join("assets", "monkey.png")
+
+if os.path.exists(monkey_path):
+    monkey_img = cv2.imread(monkey_path, cv2.IMREAD_UNCHANGED)
+    monkey_h, monkey_w = monkey_img.shape[:2]
+else:
+    st.sidebar.warning("Monkey image not found in assets folder.")
     monkey_img = None
 
 # ----- Physics Function -----
