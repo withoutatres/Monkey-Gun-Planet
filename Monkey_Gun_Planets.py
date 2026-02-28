@@ -187,8 +187,8 @@ def run_simulation():
         monk_cx = int(tx[i] * SCALE)            # always at target x
         monk_cy = HEIGHT - int(ty[i] * SCALE)   # falls independently
 
-        # ── Motion-blur fade ───────────────────────────────────────────
-        trail = (trail * 0.85).astype(np.uint8)
+        # ── Motion-blur fade (decay toward white, not black) ──────────
+        trail = (255 - ((255 - trail) * 0.75)).astype(np.uint8)
         cv2.circle(trail, (proj_px, proj_py), 3, (0, 0, 200), -1)
 
         frame = trail.copy()
