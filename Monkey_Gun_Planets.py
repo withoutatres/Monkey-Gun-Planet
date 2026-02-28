@@ -2,28 +2,39 @@ import streamlit as st
 import numpy as np
 import cv2
 import time
-import urllib.request
+import os
 
+# -----------------------------
+# Page setup
+# -----------------------------
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
-st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity (URL Image)")
+st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity")
 
-# ----- Sidebar Controls -----
+# -----------------------------
+# Constants
+# -----------------------------
+width, height = 600, 400
+scale = 25               # pixels per meter
+hit_radius = 0.5         # meters
+
+# -----------------------------
+# Sidebar controls
+# -----------------------------
 st.sidebar.header("Simulation Parameters")
+
 v0 = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
 distance = st.sidebar.slider("Distance to target (m)", 5, 30, 15)
 fps = st.sidebar.slider("Frames per second", 10, 60, 30)
-hit_radius = 0.5  # meters
+
 playback_speed = st.sidebar.select_slider(
     "Playback speed",
     options=[0.25, 0.5, 1.0, 2.0],
     value=1.0,
     format_func=lambda x: f"{int(x*100)}%"
 )
-time.sleep(dt / playback_speed)
-st.sidebar.info(f"Simulation time: {t_vals[i]:.2f} s")
 
-# Planetary gravities (m/s²)
+# Planetary gravities
 gravities = {
     "Mercury": 3.7, "Venus": 8.87, "Earth": 9.8, "Moon": 1.62,
     "Mars": 3.71, "Jupiter": 24.79, "Saturn": 10.44,
@@ -34,109 +45,111 @@ gravity = gravities[planet]
 
 fire = st.button("Fire!")
 
-# Canvas setup
-width, height = 600, 400
-scale = 25  # pixels per meter
-
-# ----- Load monkey image from URL -----
-import os
-
-# ----- Load monkey image from local assets folder -----
+# -----------------------------
+# Load monkey image
+# -----------------------------
 monkey_path = os.path.join("assets", "monkey.png")
+monkey_img = None
 
 if os.path.exists(monkey_path):
     monkey_img = cv2.imread(monkey_path, cv2.IMREAD_UNCHANGED)
     monkey_h, monkey_w = monkey_img.shape[:2]
 else:
-    st.sidebar.warning("Monkey image not found in assets folder.")
-    monkey_img = None
+    st.sidebar.warning("Monkey image not found in assets/monkey.png")
 
+# -----------------------------
+# Drawing helpers
+# -----------------------------
 def draw_shooter(frame, x, y):
-    # Body
     cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)
-    # Head
     cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)
-    # Gun
     cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3)
 
-shooter_x = int(0 * scale)
-shooter_y = int(height - 0 * scale)
-draw_shooter(frame, shooter_x, shooter_y)
-
-
-# ----- Physics Function -----
 def simulate_positions(v0, target_height, distance, g, dt, t_max=5):
     theta = np.arctan2(target_height, distance)
     vx = v0 * np.cos(theta)
     vy = v0 * np.sin(theta)
+
     t_vals = np.arange(0, t_max, dt)
     px = vx * t_vals
     py = vy * t_vals - 0.5 * g * t_vals**2
+
     tx = np.full_like(t_vals, distance)
     ty = target_height - 0.5 * g * t_vals**2
+
     return t_vals, px, py, tx, ty
 
-# ----- Fire Simulation -----
+# -----------------------------
+# Fire simulation
+# -----------------------------
 if fire:
     dt = 1 / fps
-    t_vals, px, py, tx, ty = simulate_positions(v0, target_height, distance, gravity, dt)
+    t_vals, px, py, tx, ty = simulate_positions(
+        v0, target_height, distance, gravity, dt
+    )
 
-    canvas_placeholder = st.empty()
-    hit = False
+    canvas = st.empty()
+    trail = np.ones((height, width, 3), dtype=np.uint8) * 255
+    alpha_decay = 0.85
 
-    # Trail image for motion blur
-    trail_frame = np.ones((height, width, 3), dtype=np.uint8) * 255
-    alpha_decay = 0.85  # motion blur fading factor
-
-    projectile_color = (0,0,255)
-    target_color = (0,255,0)
-    arrow_color = (255,0,0)
+    shooter_x = int(0 * scale)
+    shooter_y = height
 
     for i in range(len(t_vals)):
-        trail_frame = (trail_frame * alpha_decay).astype(np.uint8)
+        trail = (trail * alpha_decay).astype(np.uint8)
 
         proj_x = int(px[i] * scale)
         proj_y = int(height - py[i] * scale)
         targ_x = int(tx[i] * scale)
         targ_y = int(height - ty[i] * scale)
 
-        cv2.circle(trail_frame, (proj_x, proj_y), 6, projectile_color, -1)
+        frame = trail.copy()
 
-        frame = trail_frame.copy()
-        cv2.circle(frame, (targ_x, targ_y), 8, target_color, -1)
+        # Shooter
+        draw_shooter(frame, shooter_x, shooter_y)
 
+        # Projectile
+        cv2.circle(frame, (proj_x, proj_y), 6, (0,0,255), -1)
+
+        # Target
+        cv2.circle(frame, (targ_x, targ_y), 8, (0,255,0), -1)
+
+        # Monkey overlay
         if monkey_img is not None:
             y1 = targ_y - monkey_h
+            x1 = targ_x - monkey_w // 2
             y2 = y1 + monkey_h
-            x1 = targ_x - monkey_w//2
             x2 = x1 + monkey_w
-            if y1 >= 0 and x1 >= 0 and x2 < width:
-                alpha_s = monkey_img[:, :, 3] / 255.0
+
+            if 0 <= x1 < width and 0 <= y1 < height:
+                alpha_s = monkey_img[:,:,3] / 255.0
                 alpha_l = 1.0 - alpha_s
                 for c in range(3):
-                    frame[y1:y2, x1:x2, c] = (alpha_s * monkey_img[:, :, c] +
-                                              alpha_l * frame[y1:y2, x1:x2, c])
+                    frame[y1:y2, x1:x2, c] = (
+                        alpha_s * monkey_img[:,:,c] +
+                        alpha_l * frame[y1:y2, x1:x2, c]
+                    )
 
-        if i < len(t_vals)-1:
-            vx_pixel = int((px[i+1]-px[i])*scale*5)
-            vy_pixel = int(-(py[i+1]-py[i])*scale*5)
+        # Velocity arrow
+        if i < len(t_vals) - 1:
+            dx = int((px[i+1]-px[i]) * scale * 5)
+            dy = int(-(py[i+1]-py[i]) * scale * 5)
             cv2.arrowedLine(frame, (proj_x, proj_y),
-                            (proj_x + vx_pixel, proj_y + vy_pixel),
-                            arrow_color, 2, tipLength=0.3)
+                            (proj_x+dx, proj_y+dy),
+                            (255,0,0), 2)
 
-        distance_to_target = np.sqrt((px[i]-tx[i])**2 + (py[i]-ty[i])**2)
-        if distance_to_target <= hit_radius:
-            hit = True
-            cv2.putText(frame, "HIT!", (50,50), cv2.FONT_HERSHEY_SIMPLEX,
-                        1.5, (0,0,255), 3)
-            st.sidebar.success(f"Hit on {planet} at t={t_vals[i]:.2f}s")
-            canvas_placeholder.image(frame)
+        canvas.image(frame)
+        st.sidebar.info(f"Simulation time: {t_vals[i]:.2f} s")
+
+        # Playback speed control
+        time.sleep(dt / playback_speed)
+
+        # Hit detection
+        dist = np.hypot(px[i]-tx[i], py[i]-ty[i])
+        if dist <= hit_radius:
+            st.sidebar.success(f"HIT on {planet} at t={t_vals[i]:.2f}s")
             break
 
         if py[i] < 0:
-            if not hit:
-                st.sidebar.warning(f"Projectile hit the ground on {planet}!")
+            st.sidebar.warning("Projectile hit the ground")
             break
-
-        canvas_placeholder.image(frame)
-        time.sleep(dt)
