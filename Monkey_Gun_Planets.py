@@ -65,7 +65,7 @@ if os.path.exists(monkey_path):
     monkey_img = cv2.imread(monkey_path, cv2.IMREAD_UNCHANGED)
     if monkey_img is not None:
         raw_h, raw_w = monkey_img.shape[:2]
-        desired_h    = 40
+        desired_h    = 20
         new_w        = int(desired_h * raw_w / raw_h)
         monkey_img   = cv2.resize(monkey_img, (new_w, desired_h))
         MONKEY_H, MONKEY_W = monkey_img.shape[:2]
@@ -116,6 +116,9 @@ def overlay_monkey(frame, cx, cy):
         # Fallback: orange circle
         cv2.circle(frame, (cx, cy), 10, (0, 140, 255), -1)
         cv2.circle(frame, (cx, cy), 10, (0, 0, 0), 1)
+
+    # Always draw a small red centre dot so hit point is unambiguous
+    cv2.circle(frame, (cx, cy), 3, (0, 0, 220), -1)
 
 
 # -----------------------------
@@ -179,6 +182,23 @@ def run_simulation():
     # Motion-blur trail accumulator
     trail = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
 
+    # ── Pre-draw full parabola trajectory (light grey) ────────────────
+    traj_pts = []
+    for i in range(len(t_vals)):
+        tx_px = int(px[i] * SCALE)
+        ty_px = HEIGHT - int(py[i] * SCALE)
+        if 0 <= tx_px < WIDTH and 0 <= ty_px < HEIGHT:
+            traj_pts.append((tx_px, ty_px))
+        if py[i] < -0.01:
+            break
+    for k in range(len(traj_pts) - 1):
+        cv2.line(trail, traj_pts[k], traj_pts[k + 1], (200, 200, 200), 1, cv2.LINE_AA)
+
+    # Aim-line fade: visible for first aim_fade_frames frames, then gone
+    aim_fade_frames = int(0.5 * fps / playback_speed)  # 0.5 s worth of frames
+    monkey_start_cx = int(distance * SCALE)
+    monkey_start_cy = HEIGHT - int(target_height * SCALE)
+
     for i in range(len(t_vals)):
         # ── Pixel positions ────────────────────────────────────────────
         proj_px = int(px[i] * SCALE)
@@ -202,13 +222,22 @@ def run_simulation():
                  (branch_x_end,   branch_y_px),
                  (101, 67, 33), 3)
 
-        # Aim-line from gun tip to monkey's *initial* centre
-        monkey_start_cx = int(distance * SCALE)
-        monkey_start_cy = HEIGHT - int(target_height * SCALE)
-        cv2.line(frame,
-                 (shooter_px + 20, shooter_py - 35),
-                 (monkey_start_cx,  monkey_start_cy),
-                 (80, 80, 80), 1, cv2.LINE_AA)
+        # Aim-line: dashed, fades out after 0.5 s
+        if i < aim_fade_frames:
+            alpha = 1.0 - (i / aim_fade_frames)        # 1.0 → 0.0
+            colour = (int(180 * alpha),) * 3            # grey, fading
+            # Draw dashed line by stepping along it
+            x0, y0 = shooter_px + 20, shooter_py - 35
+            x1d, y1d = monkey_start_cx, monkey_start_cy
+            total = np.hypot(x1d - x0, y1d - y0)
+            dash, gap = 10, 6
+            steps = int(total / (dash + gap))
+            for s in range(steps):
+                t0 = s * (dash + gap) / total
+                t1 = min((s * (dash + gap) + dash) / total, 1.0)
+                p0 = (int(x0 + t0 * (x1d - x0)), int(y0 + t0 * (y1d - y0)))
+                p1 = (int(x0 + t1 * (x1d - x0)), int(y0 + t1 * (y1d - y0)))
+                cv2.line(frame, p0, p1, colour, 1, cv2.LINE_AA)
 
         # ── Monkey ─────────────────────────────────────────────────────
         overlay_monkey(frame, monk_cx, monk_cy)
