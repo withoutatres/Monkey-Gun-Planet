@@ -7,17 +7,7 @@ import urllib.request
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
 st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity (URL Image)")
 
-def draw_shooter(frame, x, y):
-    # Body
-    cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)
-    # Head
-    cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)
-    # Gun
-    cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3)
 
-shooter_x = int(0 * scale)
-shooter_y = int(height - 0 * scale)
-draw_shooter(frame, shooter_x, shooter_y)
 
 
 # ----- Sidebar Controls -----
@@ -63,6 +53,19 @@ if os.path.exists(monkey_path):
 else:
     st.sidebar.warning("Monkey image not found in assets folder.")
     monkey_img = None
+
+def draw_shooter(frame, x, y):
+    # Body
+    cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)
+    # Head
+    cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)
+    # Gun
+    cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3)
+
+shooter_x = int(0 * scale)
+shooter_y = int(height - 0 * scale)
+draw_shooter(frame, shooter_x, shooter_y)
+
 
 # ----- Physics Function -----
 def simulate_positions(v0, target_height, distance, g, dt, t_max=5):
