@@ -202,10 +202,12 @@ def run_simulation():
                  (branch_x_end,   branch_y_px),
                  (101, 67, 33), 3)
 
-        # Aim-line from gun tip to monkey's *initial* position
+        # Aim-line from gun tip to monkey's *initial* centre
+        monkey_start_cx = int(distance * SCALE)
+        monkey_start_cy = HEIGHT - int(target_height * SCALE)
         cv2.line(frame,
                  (shooter_px + 20, shooter_py - 35),
-                 (branch_x_end,    branch_y_px),
+                 (monkey_start_cx,  monkey_start_cy),
                  (80, 80, 80), 1, cv2.LINE_AA)
 
         # ── Monkey ─────────────────────────────────────────────────────
