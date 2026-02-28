@@ -36,7 +36,7 @@ hit_radius = 0.5         # meters
 st.sidebar.header("Simulation Parameters")
 v0 = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
-distance = st.sidebar.slider("Distance to target (m)", 5, 20, 15)  # max reduced to fit canvas
+distance = st.sidebar.slider("Distance to target (m)", 5, 20, 15)
 fps = st.sidebar.slider("Frames per second", 10, 60, 30)
 
 playback_speed = st.sidebar.select_slider(
@@ -46,10 +46,8 @@ playback_speed = st.sidebar.select_slider(
     format_func=lambda x: f"{int(x*100)}%"
 )
 
-# Optional angle override
 angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -20, 20, 0)
 
-# Planetary gravities
 gravities = {
     "Mercury": 3.7, "Venus": 8.87, "Earth": 9.8, "Moon": 1.62,
     "Mars": 3.71, "Jupiter": 24.79, "Saturn": 10.44,
@@ -58,16 +56,14 @@ gravities = {
 planet = st.sidebar.selectbox("Planet / Moon", list(gravities.keys()))
 gravity = gravities[planet]
 
-# Buttons
 fire = st.button("Fire!")
-replay = st.button("Replay")  # Replay button
+replay = st.button("Replay")
 
 # -----------------------------
 # Load monkey image
 # -----------------------------
 monkey_path = os.path.join("assets", "monkey.png")
 monkey_img = None
-
 if os.path.exists(monkey_path):
     monkey_img = cv2.imread(monkey_path, cv2.IMREAD_UNCHANGED)
     monkey_h, monkey_w = monkey_img.shape[:2]
@@ -78,9 +74,9 @@ else:
 # Drawing helpers
 # -----------------------------
 def draw_shooter(frame, x, y):
-    cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)      # body
-    cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)         # head
-    cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3) # gun
+    cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)
+    cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)
+    cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3)
 
 def simulate_positions(v0, target_height, distance, g, dt, angle_offset_deg=0, t_max=5):
     theta = np.arctan2(target_height, distance) + np.deg2rad(angle_offset_deg)
@@ -98,9 +94,7 @@ def simulate_positions(v0, target_height, distance, g, dt, angle_offset_deg=0, t
 # -----------------------------
 def run_simulation():
     dt = 1 / fps
-    t_vals, px, py, tx, ty = simulate_positions(
-        v0, target_height, distance, gravity, dt, angle_offset_deg
-    )
+    t_vals, px, py, tx, ty = simulate_positions(v0, target_height, distance, gravity, dt, angle_offset_deg)
 
     canvas = st.empty()
     hit = False
@@ -108,7 +102,6 @@ def run_simulation():
     shooter_x = int(0 * scale)
     shooter_y = height
 
-    # Resize monkey to reasonable size
     if monkey_img is not None:
         desired_height = 40
         aspect = monkey_w / monkey_h
@@ -118,7 +111,7 @@ def run_simulation():
     else:
         monkey_resized = None
 
-    # Static branch coordinates (thin line)
+    # Static branch coordinates (thin line at initial monkey position)
     branch_length = 50
     branch_y_static = int(height - target_height * scale + 10)
     branch_x_start = int(distance * scale - 15 + 5)
@@ -129,10 +122,10 @@ def run_simulation():
 
         proj_x = int(px[i] * scale)
         proj_y = int(height - py[i] * scale)
-        targ_x = int(tx[i] * scale)
-        targ_y = int(height - ty[i] * scale)
+        monkey_x = branch_x_end - monkey_w2 // 2
+        monkey_y = int(height - py[i] * scale) - monkey_h2  # monkey falls
 
-        # Draw shooter
+        # Shooter
         draw_shooter(frame, shooter_x, shooter_y)
 
         # Trail
@@ -149,8 +142,8 @@ def run_simulation():
 
         # Monkey
         if monkey_resized is not None:
-            y1 = branch_y_static - monkey_h2
-            x1 = branch_x_end - monkey_w2 // 2
+            y1 = monkey_y
+            x1 = monkey_x
             y2 = y1 + monkey_h2
             x2 = x1 + monkey_w2
             if 0 <= x1 < width and 0 <= y1 < height and x2 < width and y2 < height:
