@@ -10,7 +10,6 @@ import os
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
 st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity")
 
-# Narrative / explanation
 st.markdown("""
 ### Monkey Gun Problem
 A hunter aims directly at a monkey sitting on a tree branch.  
@@ -111,7 +110,7 @@ def run_simulation():
     else:
         monkey_resized = None
 
-    # Static branch coordinates (thin line at initial monkey position)
+    # Static branch coordinates
     branch_length = 50
     branch_y_static = int(height - target_height * scale + 10)
     branch_x_start = int(distance * scale - 15 + 5)
@@ -122,8 +121,10 @@ def run_simulation():
 
         proj_x = int(px[i] * scale)
         proj_y = int(height - py[i] * scale)
+
+        # Monkey image position
         monkey_x = branch_x_end - monkey_w2 // 2
-        monkey_y = int(height - py[i] * scale) - monkey_h2  # monkey falls
+        monkey_y = int(height - py[i] * scale) - monkey_h2
 
         # Shooter
         draw_shooter(frame, shooter_x, shooter_y)
@@ -140,7 +141,7 @@ def run_simulation():
         # Draw static branch
         cv2.line(frame, (branch_x_start, branch_y_static), (branch_x_end, branch_y_static), (101,67,33), 2)
 
-        # Monkey
+        # Draw monkey image
         if monkey_resized is not None:
             y1 = monkey_y
             x1 = monkey_x
@@ -155,6 +156,11 @@ def run_simulation():
                         alpha_l * frame[y1:y2, x1:x2, c]
                     )
 
+        # Draw green target dot (center of monkey) to fall with it
+        dot_x = monkey_x + monkey_w2 // 2
+        dot_y = monkey_y + monkey_h2 // 2
+        cv2.circle(frame, (dot_x, dot_y), 5, (0,255,0), -1)
+
         # Aim line
         cv2.line(frame, (shooter_x + 20, shooter_y - 25),
                  (branch_x_end, branch_y_static - monkey_h2//2),
@@ -168,7 +174,7 @@ def run_simulation():
                             (proj_x+dx, proj_y+dy),
                             (255,0,0), 2)
 
-        # Hit detection
+        # Hit detection uses green dot
         dist = np.hypot(px[i]-tx[i], py[i]-ty[i])
         if dist <= hit_radius:
             hit = True
