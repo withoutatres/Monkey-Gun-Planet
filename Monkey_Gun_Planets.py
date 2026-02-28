@@ -83,30 +83,46 @@ def simulate_positions(v0, target_height, distance, g, dt, t_max=5):
 # Fire simulation
 # -----------------------------
 if fire:
+
     dt = 1 / fps
     t_vals, px, py, tx, ty = simulate_positions(
         v0, target_height, distance, gravity, dt
     )
 
     canvas = st.empty()
-    trail = np.ones((height, width, 3), dtype=np.uint8) * 255
-    alpha_decay = 0.85
+    hit = False
 
     shooter_x = int(0 * scale)
     shooter_y = height
 
+    # Resize monkey to reasonable size
+    if monkey_img is not None:
+        desired_height = 40
+        aspect = monkey_w / monkey_h
+        new_w = int(desired_height * aspect)
+        monkey_resized = cv2.resize(monkey_img, (new_w, desired_height))
+        monkey_h2, monkey_w2 = monkey_resized.shape[:2]
+    else:
+        monkey_resized = None
+
     for i in range(len(t_vals)):
-        trail = (trail * alpha_decay).astype(np.uint8)
+
+        # Fresh white background each frame
+        frame = np.ones((height, width, 3), dtype=np.uint8) * 255
 
         proj_x = int(px[i] * scale)
         proj_y = int(height - py[i] * scale)
         targ_x = int(tx[i] * scale)
         targ_y = int(height - ty[i] * scale)
 
-        frame = trail.copy()
-
         # Shooter
         draw_shooter(frame, shooter_x, shooter_y)
+
+        # Draw projectile trail (draw past points)
+        for j in range(i):
+            trail_x = int(px[j] * scale)
+            trail_y = int(height - py[j] * scale)
+            cv2.circle(frame, (trail_x, trail_y), 2, (150,150,150), -1)
 
         # Projectile
         cv2.circle(frame, (proj_x, proj_y), 6, (0,0,255), -1)
@@ -115,18 +131,19 @@ if fire:
         cv2.circle(frame, (targ_x, targ_y), 8, (0,255,0), -1)
 
         # Monkey overlay
-        if monkey_img is not None:
-            y1 = targ_y - monkey_h
-            x1 = targ_x - monkey_w // 2
-            y2 = y1 + monkey_h
-            x2 = x1 + monkey_w
+        if monkey_resized is not None:
+            y1 = targ_y - monkey_h2
+            x1 = targ_x - monkey_w2 // 2
+            y2 = y1 + monkey_h2
+            x2 = x1 + monkey_w2
 
-            if 0 <= x1 < width and 0 <= y1 < height:
-                alpha_s = monkey_img[:,:,3] / 255.0
+            if 0 <= x1 < width and 0 <= y1 < height and x2 < width and y2 < height:
+                alpha_s = monkey_resized[:, :, 3] / 255.0
                 alpha_l = 1.0 - alpha_s
+
                 for c in range(3):
                     frame[y1:y2, x1:x2, c] = (
-                        alpha_s * monkey_img[:,:,c] +
+                        alpha_s * monkey_resized[:, :, c] +
                         alpha_l * frame[y1:y2, x1:x2, c]
                     )
 
@@ -138,18 +155,29 @@ if fire:
                             (proj_x+dx, proj_y+dy),
                             (255,0,0), 2)
 
+        # Hit detection
+        dist = np.hypot(px[i]-tx[i], py[i]-ty[i])
+
+        if dist <= hit_radius:
+            hit = True
+            cv2.putText(frame, "HIT!", (200,50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.5, (0,0,255), 3)
+            st.sidebar.success(f"HIT on {planet} at t={t_vals[i]:.2f}s")
+
+        # Ground impact
+        if py[i] < 0 and not hit:
+            cv2.putText(frame, "MISS", (200,50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.5, (0,0,255), 3)
+            st.sidebar.warning("Projectile hit the ground")
+            canvas.image(frame)
+            break
+
         canvas.image(frame)
         st.sidebar.info(f"Simulation time: {t_vals[i]:.2f} s")
 
-        # Playback speed control
         time.sleep(dt / playback_speed)
 
-        # Hit detection
-        dist = np.hypot(px[i]-tx[i], py[i]-ty[i])
-        if dist <= hit_radius:
-            st.sidebar.success(f"HIT on {planet} at t={t_vals[i]:.2f}s")
-            break
-
-        if py[i] < 0:
-            st.sidebar.warning("Projectile hit the ground")
+        if hit:
             break
