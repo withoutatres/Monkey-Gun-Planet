@@ -7,7 +7,7 @@ import urllib.request
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
 st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity (URL Image)")
 
- ----- Sidebar Controls -----
+# ----- Sidebar Controls -----
 st.sidebar.header("Simulation Parameters")
 v0 = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
