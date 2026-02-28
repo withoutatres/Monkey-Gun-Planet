@@ -240,7 +240,8 @@ def run_simulation():
             break
 
         # Bullet hits the ground without reaching monkey
-        if py[i] <= 0 and not hit:
+        # Use < -0.01 (not <= 0) so the starting position y=0 doesn't trigger this
+        if py[i] < -0.01 and not hit:
             label = f"MISS – bullet hit ground at t = {t_vals[i]:.2f} s"
             cv2.putText(frame, label, (60, 55),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 200), 2)
