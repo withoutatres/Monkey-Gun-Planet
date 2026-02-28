@@ -36,7 +36,7 @@ hit_radius = 0.5         # meters
 st.sidebar.header("Simulation Parameters")
 v0 = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
-distance = st.sidebar.slider("Distance to target (m)", 5, 20, 15)  # reduced max to fit canvas
+distance = st.sidebar.slider("Distance to target (m)", 5, 20, 15)  # max reduced to fit canvas
 fps = st.sidebar.slider("Frames per second", 10, 60, 30)
 
 playback_speed = st.sidebar.select_slider(
@@ -46,7 +46,7 @@ playback_speed = st.sidebar.select_slider(
     format_func=lambda x: f"{int(x*100)}%"
 )
 
-# Optional angle override to illustrate missing the monkey
+# Optional angle override
 angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -20, 20, 0)
 
 # Planetary gravities
@@ -60,7 +60,7 @@ gravity = gravities[planet]
 
 # Buttons
 fire = st.button("Fire!")
-replay = st.button("Replay")  # New replay button
+replay = st.button("Replay")  # Replay button
 
 # -----------------------------
 # Load monkey image
@@ -86,7 +86,6 @@ def simulate_positions(v0, target_height, distance, g, dt, angle_offset_deg=0, t
     theta = np.arctan2(target_height, distance) + np.deg2rad(angle_offset_deg)
     vx = v0 * np.cos(theta)
     vy = v0 * np.sin(theta)
-
     t_vals = np.arange(0, t_max, dt)
     px = vx * t_vals
     py = vy * t_vals - 0.5 * g * t_vals**2
@@ -119,6 +118,12 @@ def run_simulation():
     else:
         monkey_resized = None
 
+    # Static branch coordinates (thin line)
+    branch_length = 50
+    branch_y_static = int(height - target_height * scale + 10)
+    branch_x_start = int(distance * scale - 15 + 5)
+    branch_x_end = branch_x_start + branch_length
+
     for i in range(len(t_vals)):
         frame = np.ones((height, width, 3), dtype=np.uint8) * 255
 
@@ -127,7 +132,7 @@ def run_simulation():
         targ_x = int(tx[i] * scale)
         targ_y = int(height - ty[i] * scale)
 
-        # Shooter
+        # Draw shooter
         draw_shooter(frame, shooter_x, shooter_y)
 
         # Trail
@@ -139,21 +144,13 @@ def run_simulation():
         # Projectile
         cv2.circle(frame, (proj_x, proj_y), 6, (0,0,255), -1)
 
-        # Tree trunk
-        trunk_x = targ_x - 15
-        trunk_y = targ_y
-        trunk_height = 60
-        cv2.rectangle(frame, (trunk_x, trunk_y), (trunk_x+10, trunk_y+trunk_height), (101,67,33), -1)
-
-        # Branch
-        branch_length = 50
-        branch_y = targ_y + 10
-        cv2.line(frame, (trunk_x+5, branch_y), (trunk_x+5+branch_length, branch_y), (101,67,33), 5)
+        # Draw static branch
+        cv2.line(frame, (branch_x_start, branch_y_static), (branch_x_end, branch_y_static), (101,67,33), 2)
 
         # Monkey
         if monkey_resized is not None:
-            y1 = branch_y - monkey_h2
-            x1 = trunk_x + 5 + branch_length - monkey_w2 // 2
+            y1 = branch_y_static - monkey_h2
+            x1 = branch_x_end - monkey_w2 // 2
             y2 = y1 + monkey_h2
             x2 = x1 + monkey_w2
             if 0 <= x1 < width and 0 <= y1 < height and x2 < width and y2 < height:
@@ -167,7 +164,7 @@ def run_simulation():
 
         # Aim line
         cv2.line(frame, (shooter_x + 20, shooter_y - 25),
-                 (trunk_x + 5 + branch_length, branch_y - monkey_h2//2),
+                 (branch_x_end, branch_y_static - monkey_h2//2),
                  (0,0,0), 1, lineType=cv2.LINE_AA)
 
         # Velocity arrow
