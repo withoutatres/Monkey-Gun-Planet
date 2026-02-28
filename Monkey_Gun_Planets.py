@@ -96,6 +96,7 @@ def run_simulation():
     shooter_x = 0
     shooter_y = height
 
+    # Resize monkey image if available
     if monkey_img is not None:
         desired_height = 40
         aspect = monkey_w/monkey_h
@@ -105,35 +106,34 @@ def run_simulation():
     else:
         monkey_resized = None
 
-    # Static branch coordinates
+    # Static branch
     branch_length = 50
     branch_y_static = int(height - target_height*scale + 10)
     branch_x_start = int(distance*scale - 15 + 5)
     branch_x_end = branch_x_start + branch_length
 
+    # Trail frame for motion blur
+    trail_frame = np.ones((height,width,3),dtype=np.uint8)*255
+    alpha_decay = 0.85
+
     for i in range(len(t_vals)):
-        frame = np.ones((height,width,3),dtype=np.uint8)*255
+        # Fade previous trail for motion blur
+        trail_frame = (trail_frame*alpha_decay).astype(np.uint8)
 
         proj_x = int(px[i]*scale)
         proj_y = int(height - py[i]*scale)
-
-        # Monkey image position
         monkey_x = branch_x_end - monkey_w2//2
         monkey_y = int(height - py[i]*scale) - monkey_h2
+
+        # Projectile trail
+        cv2.circle(trail_frame,(proj_x,proj_y),3,(0,0,255),-1)
+
+        frame = trail_frame.copy()
 
         # Shooter
         draw_shooter(frame,shooter_x,shooter_y)
 
-        # Trail
-        for j in range(i):
-            trail_x = int(px[j]*scale)
-            trail_y = int(height - py[j]*scale)
-            cv2.circle(frame,(trail_x,trail_y),2,(150,150,150),-1)
-
-        # Projectile
-        cv2.circle(frame,(proj_x,proj_y),6,(0,0,255),-1)
-
-        # Draw branch
+        # Draw static branch
         cv2.line(frame,(branch_x_start,branch_y_static),(branch_x_end,branch_y_static),(101,67,33),2)
 
         # Monkey image
@@ -156,13 +156,13 @@ def run_simulation():
         # Aim line
         cv2.line(frame,(shooter_x+20,shooter_y-25),(branch_x_end,branch_y_static - monkey_h2//2),(0,0,0),1,cv2.LINE_AA)
 
-        # Velocity arrow (small)
+        # Velocity arrow
         if i < len(t_vals)-1:
             dx = int((px[i+1]-px[i])*scale*2)
             dy = int(-(py[i+1]-py[i])*scale*2)
             cv2.arrowedLine(frame,(proj_x,proj_y),(proj_x+dx,proj_y+dy),(255,0,0),2)
 
-        # Hit detection uses green dot
+        # Hit detection with green dot
         dist = np.hypot(proj_x - dot_x, proj_y - dot_y)/scale
         if dist <= hit_radius:
             hit = True
