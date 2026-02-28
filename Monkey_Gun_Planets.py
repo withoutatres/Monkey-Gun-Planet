@@ -7,6 +7,19 @@ import urllib.request
 st.set_page_config(page_title="Monkey Gun Physics Simulation", layout="wide")
 st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity (URL Image)")
 
+def draw_shooter(frame, x, y):
+    # Body
+    cv2.line(frame, (x, y), (x, y-30), (0,0,0), 2)
+    # Head
+    cv2.circle(frame, (x, y-40), 8, (0,0,0), 2)
+    # Gun
+    cv2.line(frame, (x, y-25), (x+20, y-35), (0,0,0), 3)
+
+shooter_x = int(0 * scale)
+shooter_y = int(height - 0 * scale)
+draw_shooter(frame, shooter_x, shooter_y)
+
+
 # ----- Sidebar Controls -----
 st.sidebar.header("Simulation Parameters")
 v0 = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
@@ -14,6 +27,14 @@ target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
 distance = st.sidebar.slider("Distance to target (m)", 5, 30, 15)
 fps = st.sidebar.slider("Frames per second", 10, 60, 30)
 hit_radius = 0.5  # meters
+playback_speed = st.sidebar.select_slider(
+    "Playback speed",
+    options=[0.25, 0.5, 1.0, 2.0],
+    value=1.0,
+    format_func=lambda x: f"{int(x*100)}%"
+)
+time.sleep(dt / playback_speed)
+st.sidebar.info(f"Simulation time: {t_vals[i]:.2f} s")
 
 # Planetary gravities (m/s²)
 gravities = {
