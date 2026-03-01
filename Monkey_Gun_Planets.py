@@ -125,33 +125,24 @@ def overlay_monkey(frame, cx, cy):
 # Physics
 # -----------------------------
 def simulate_positions(v0, target_height, distance, g, dt,
-                        angle_offset_deg=0, t_max=5):
+                        angle_offset_deg=0, t_max=5,
+                        origin_x_m=0.0, origin_y_m=0.0):
     """
     Returns arrays of time, projectile (px,py) and monkey (tx,ty).
-
-    Key physics insight
-    ------------------
-    Both the bullet and the monkey fall under the SAME gravitational
-    acceleration from t=0.  The bullet is aimed at the monkey's *initial*
-    position.  Therefore they always meet (assuming the bullet reaches
-    the horizontal distance before hitting the ground), regardless of g.
-
-    Projectile:
-        px(t) = vx * t
-        py(t) = vy * t  -  ½ g t²
-
-    Monkey (free-fall from rest at (distance, target_height)):
-        tx(t) = distance           (fixed horizontal)
-        ty(t) = target_height  -  ½ g t²
+    px/py are relative to origin_x_m / origin_y_m.
+    The aim angle is computed from the origin to the monkey's initial position.
     """
-    theta = np.arctan2(target_height, distance) + np.deg2rad(angle_offset_deg)
+    # Aim from gun tip toward monkey's initial position
+    dx_to_monkey = distance - origin_x_m
+    dy_to_monkey = target_height - origin_y_m
+    theta = np.arctan2(dy_to_monkey, dx_to_monkey) + np.deg2rad(angle_offset_deg)
     vx    = v0 * np.cos(theta)
     vy    = v0 * np.sin(theta)
 
     t_vals = np.arange(0, t_max, dt)
 
     px = vx * t_vals
-    py = vy * t_vals - 0.5 * g * t_vals ** 2   # bullet y
+    py = vy * t_vals - 0.5 * g * t_vals ** 2   # bullet y (relative to origin)
 
     tx = np.full_like(t_vals, distance)          # monkey x stays fixed
     ty = target_height - 0.5 * g * t_vals ** 2  # monkey y – independent fall
@@ -164,54 +155,64 @@ def simulate_positions(v0, target_height, distance, g, dt,
 # -----------------------------
 def run_simulation():
     dt = 1.0 / fps
+
+    shooter_px = 0
+    shooter_py = HEIGHT
+
+    # Gun tip in pixel space — projectile launches from here
+    gun_tip_px = shooter_px + 20
+    gun_tip_py = shooter_py - 35
+
+    # Gun tip in physics/metres space (the bullet's true origin)
+    gun_tip_x_m = gun_tip_px / SCALE
+    gun_tip_y_m = (HEIGHT - gun_tip_py) / SCALE
+
     t_vals, px, py, tx, ty = simulate_positions(
-        v0, target_height, distance, gravity, dt, angle_offset_deg
+        v0, target_height, distance, gravity, dt, angle_offset_deg,
+        origin_x_m=gun_tip_x_m, origin_y_m=gun_tip_y_m
     )
 
     canvas = st.empty()
     hit    = False
-
-    shooter_px = 0        # hunter starts at left edge
-    shooter_py = HEIGHT
 
     # Branch geometry (static – where the monkey *started*)
     branch_y_px    = HEIGHT - int(target_height * SCALE)
     branch_x_start = int(distance * SCALE) - 30
     branch_x_end   = int(distance * SCALE) + 30
 
-    # Motion-blur trail accumulator
-    trail = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
-
-    # ── Pre-draw full parabola trajectory (light grey) ────────────────
-    traj_pts = []
-    for i in range(len(t_vals)):
-        tx_px = int(px[i] * SCALE)
-        ty_px = HEIGHT - int(py[i] * SCALE)
-        if 0 <= tx_px < WIDTH and 0 <= ty_px < HEIGHT:
-            traj_pts.append((tx_px, ty_px))
-        if py[i] < -0.01:
-            break
-    for k in range(len(traj_pts) - 1):
-        cv2.line(trail, traj_pts[k], traj_pts[k + 1], (200, 200, 200), 1, cv2.LINE_AA)
-
     # Aim-line fade: visible for first aim_fade_frames frames, then gone
-    aim_fade_frames = int(0.5 * fps / playback_speed)  # 0.5 s worth of frames
+    aim_fade_frames = int(0.5 * fps / playback_speed)
     monkey_start_cx = int(distance * SCALE)
     monkey_start_cy = HEIGHT - int(target_height * SCALE)
 
+    # Persistent trajectory layer — segments drawn here are never faded
+    traj_layer = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
+    prev_proj_px, prev_proj_py = gun_tip_px, gun_tip_py
+
+    # Motion-blur trail (fades toward white each frame)
+    trail = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
+
     for i in range(len(t_vals)):
-        # ── Pixel positions ────────────────────────────────────────────
-        proj_px = int(px[i] * SCALE)
-        proj_py = HEIGHT - int(py[i] * SCALE)   # flip Y (screen coords)
+        # ── Pixel positions (offset so bullet starts at gun tip) ───────
+        proj_px = gun_tip_px + int(px[i] * SCALE)
+        proj_py = gun_tip_py - int(py[i] * SCALE)   # subtract: up = negative screen Y
 
         monk_cx = int(tx[i] * SCALE)            # always at target x
         monk_cy = HEIGHT - int(ty[i] * SCALE)   # falls independently
 
+        # ── Accumulate persistent trajectory (never fades) ────────────
+        if 0 <= proj_px < WIDTH and 0 <= proj_py < HEIGHT:
+            cv2.line(traj_layer, (prev_proj_px, prev_proj_py),
+                     (proj_px, proj_py), (180, 180, 180), 1, cv2.LINE_AA)
+        prev_proj_px, prev_proj_py = proj_px, proj_py
+
         # ── Motion-blur fade (decay toward white, not black) ──────────
         trail = (255 - ((255 - trail) * 0.75)).astype(np.uint8)
-        cv2.circle(trail, (proj_px, proj_py), 3, (0, 0, 200), -1)
+        if 0 <= proj_px < WIDTH and 0 <= proj_py < HEIGHT:
+            cv2.circle(trail, (proj_px, proj_py), 3, (0, 0, 200), -1)
 
-        frame = trail.copy()
+        # Compose: persistent trajectory + fading motion blur dots
+        frame = np.minimum(traj_layer, trail)
 
         # ── Static scene elements ──────────────────────────────────────
         draw_shooter(frame, shooter_px, shooter_py)
@@ -252,7 +253,12 @@ def run_simulation():
                             (200, 0, 0), 2)
 
         # ── Hit / miss detection ───────────────────────────────────────
-        dist_m = np.hypot(px[i] - tx[i], py[i] - ty[i])  # in metres
+        # Bullet physics coords are relative to origin; add gun tip offset for comparison
+        bullet_x_m = gun_tip_px / SCALE + px[i]
+        bullet_y_m = (HEIGHT - gun_tip_py) / SCALE + py[i]
+        monkey_x_m = tx[i]
+        monkey_y_m = ty[i]
+        dist_m = np.hypot(bullet_x_m - monkey_x_m, bullet_y_m - monkey_y_m)
 
         if dist_m <= HIT_RADIUS:
             hit = True
