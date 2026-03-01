@@ -32,10 +32,11 @@ v0             = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height  = st.sidebar.slider("Target height (m)", 1, 15, 10)
 distance       = st.sidebar.slider("Distance to target (m)", 5, 20, 15)
 fps            = st.sidebar.slider("Frames per second", 10, 60, 30)
-playback_speed = st.sidebar.select_slider(
-    "Playback speed", options=[0.25, 0.5, 1.0, 2.0], value=1.0,
-    format_func=lambda x: f"{int(x * 100)}%"
+playback_pct = st.sidebar.slider(
+    "Playback speed (%)", min_value=5, max_value=100, value=100, step=5,
+    format="%d%%"
 )
+playback_speed = playback_pct / 100.0
 angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -20, 20, 0)
 
 gravities = {
@@ -213,6 +214,8 @@ def run_simulation():
     dot_interval = max(1, int(0.1 * fps))
 
     for i in range(len(t_vals)):
+        frame_start = time.time()   # wall-clock start for this frame
+
         # ── Pixel positions ────────────────────────────────────────────
         proj_px = gun_tip_px + int(px[i] * SCALE)
         proj_py = gun_tip_py - int(py[i] * SCALE)   # screen Y is inverted
@@ -296,8 +299,12 @@ def run_simulation():
             canvas.image(frame, channels="BGR")
             break
 
+        # Wall-clock timing: sleep only what remains after render overhead
+        frame_deadline = frame_start + (dt / playback_speed)
         canvas.image(frame, channels="BGR")
-        time.sleep(dt / playback_speed)
+        remaining = frame_deadline - time.time()
+        if remaining > 0:
+            time.sleep(remaining)
 
 
 # -----------------------------
