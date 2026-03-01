@@ -114,8 +114,8 @@ def overlay_monkey(frame, cx, cy):
         cv2.circle(frame, (cx, cy), 10, (0, 140, 255), -1)
         cv2.circle(frame, (cx, cy), 10, (0, 0, 0), 1)
 
-    # Always draw a small red centre dot so hit point is unambiguous
-    cv2.circle(frame, (cx, cy), 3, (0, 0, 220), -1)
+    # Always draw a small green centre dot so hit point is unambiguous
+    cv2.circle(frame, (cx, cy), 3, (0, 200, 0), -1)
 
 
 # -----------------------------
