@@ -12,14 +12,11 @@ st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity")
 
 st.markdown("""
 ### Monkey Gun Problem
-A hunter aims directly at a monkey sitting on a tree branch.  
-As soon as the hunter fires, the monkey lets go and falls. Will the projectile hit the monkey?
+A monkey is swinging through the jungle, when he sees a hunter aiming directly at him.  
+He thinks to himself - if I let go as soon as he fires, I'll drop safely out of the way.
+Will his plan work?
 
-- **Projectile speed**: set how fast the bullet travels  
-- **Distance & height**: place the monkey  
-- **Planet**: select gravity to see how physics changes  
-- **Playback speed**: slow motion for better observation  
-- **Aim offset**: try firing above or below to see the paradox in action
+
 """)
 
 # -----------------------------
@@ -44,9 +41,9 @@ playback_speed = st.sidebar.select_slider(
 angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -20, 20, 0)
 
 gravities = {
-    "Mercury": 3.7,  "Venus": 8.87,  "Earth": 9.8,   "Moon": 1.62,
-    "Mars":    3.71, "Jupiter": 24.79, "Saturn": 10.44,
-    "Uranus":  8.69, "Neptune": 11.15, "Pluto": 0.62
+    "Mercury (38%)": 3.7,  "Venus (90.4%)": 8.87,  "Earth (100%)": 9.8,   "Moon (16.5%)": 1.62,
+    "Mars (38%)":    3.71, "Jupiter (252.8%)": 24.79, "Saturn (106.5%)": 10.44,
+    "Uranus (88.6%)":  8.69, "Neptune (114%)": 11.15, "Pluto (6%)": 0.62
 }
 planet  = st.sidebar.selectbox("Planet / Moon", list(gravities.keys()))
 gravity = gravities[planet]
