@@ -13,7 +13,7 @@ st.title("🐵 Monkey and Hunter Simulation – Planetary Gravity")
 st.markdown("""
 ### Monkey Gun Problem
 A monkey is swinging through the jungle, when he sees a hunter aiming directly at him.  
-He thinks to himself - if I let go as soon as he fires, I'll drop safely out of the way.
+He thinks to himself - if I let go as soon as the hunter fires, I'll drop safely out of the way.
 Will his plan work?
 """)
 
