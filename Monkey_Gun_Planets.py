@@ -234,6 +234,12 @@ def run_simulation():
     # One trajectory dot every 0.1 s
     dot_interval = max(1, int(0.1 * fps))
 
+    # Track previous bullet/monkey positions for between-frame hit detection
+    prev_bx_m = gun_tip_x_m
+    prev_by_m = gun_tip_y_m
+    prev_mx_m = float(distance)
+    prev_my_m = float(target_height)
+
     for i in range(len(t_vals)):
         frame_start = time.time()   # wall-clock start for this frame
 
@@ -299,11 +305,23 @@ def run_simulation():
                             (200, 0, 0), 2)
 
         # ── Hit / miss detection (absolute metres) ────────────────────
+        # Check minimum distance along the segment from previous frame to current
+        # frame, so fast-moving bullets don't slip through the gap between frames.
         bullet_x_m = gun_tip_x_m + px[i]
         bullet_y_m = gun_tip_y_m + py[i]
-        dist_m = np.hypot(bullet_x_m - tx[i], bullet_y_m - ty[i])
+        rx0 = prev_bx_m - prev_mx_m; ry0 = prev_by_m - prev_my_m
+        rx1 = bullet_x_m - tx[i];    ry1 = bullet_y_m - ty[i]
+        drx = rx1 - rx0; dry = ry1 - ry0
+        denom = drx**2 + dry**2
+        if denom > 0:
+            s_star = np.clip(-(rx0*drx + ry0*dry) / denom, 0, 1)
+            min_dist = np.hypot(rx0 + s_star*drx, ry0 + s_star*dry)
+        else:
+            min_dist = np.hypot(rx0, ry0)
+        prev_bx_m = bullet_x_m; prev_by_m = bullet_y_m
+        prev_mx_m = tx[i];      prev_my_m = ty[i]
 
-        if dist_m <= HIT_RADIUS:
+        if min_dist <= HIT_RADIUS:
             cv2.putText(frame, f"HIT!  t = {t_vals[i]:.2f} s",
                         (160, 55), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (0, 180, 0), 3)
             canvas.image(frame, channels="BGR")
