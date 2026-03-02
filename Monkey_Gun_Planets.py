@@ -17,6 +17,13 @@ He thinks to himself - if I let go as soon as the hunter fires, I'll drop safely
 Will his plan work?
 """)
 
+st.markdown("""
+---
+*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG) and always wanted to build. 
+Not having a big room and a complicated electromagnetic setup, I'm excited to be able to 
+recreate and share it virtually — and enhance it to show the differences that running the 
+experiment on different planets (if it were possible to do so) would have.*
+""")
 # -----------------------------
 # Constants
 # -----------------------------
@@ -51,7 +58,7 @@ gravities = {
     "Neptune (114%)":   11.15,
     "Pluto (6%)":       0.62,
 }
-planet  = st.sidebar.selectbox("Planet / Moon", list(gravities.keys()))
+planet  = st.sidebar.selectbox("Planet / Moon", list(gravities.keys()), index=2)
 gravity = gravities[planet]
 
 fire   = st.button("Fire!")
