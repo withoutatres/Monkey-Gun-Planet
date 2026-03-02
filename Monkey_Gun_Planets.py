@@ -94,7 +94,7 @@ monkey_y_at_meet = target_height - 0.5 * gravity * t_meet**2
 t_monkey_ground = np.sqrt(2 * target_height / gravity)
 min_speed = np.hypot(dx, dy) / t_monkey_ground
 
-with st.expander("📐 Show the maths — how would you solve this on paper?"):
+with st.expander("📐 Show the math — how would you solve this on paper?"):
     st.markdown(f"""
 #### Step 1 — Find the aim angle
 
