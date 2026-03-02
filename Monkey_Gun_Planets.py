@@ -331,7 +331,7 @@ def run_simulation():
             break
 
         if ty[i] <= 0 and not hit:
-            close = min_dist_overall < 0.2
+            close = min_dist_overall < 0.35
             label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
                      if close else
                      f"MISS - monkey hit ground at t = {t_vals[i]:.2f} s")
@@ -342,7 +342,7 @@ def run_simulation():
 
         # py[i] < -0.01 (not <= 0) so t=0 starting position does not trigger this
         if py[i] < -0.01 and not hit:
-            close = min_dist_overall < 0.2
+            close = min_dist_overall < 0.35
             label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
                      if close else
                      f"MISS - bullet hit ground at t = {t_vals[i]:.2f} s")
