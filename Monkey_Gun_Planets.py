@@ -79,6 +79,97 @@ fire   = st.button("Fire!")
 replay = st.button("Replay")
 
 # -----------------------------
+# Worked math expander (live values)
+# -----------------------------
+gun_tip_x_m = 20 / SCALE        # 0.80 m
+gun_tip_y_m = 35 / SCALE        # 1.40 m
+dx = distance - gun_tip_x_m
+dy = target_height - gun_tip_y_m
+theta_rad = np.arctan2(dy, dx) + np.deg2rad(angle_offset_deg)
+theta_deg = np.rad2deg(theta_rad)
+vx = v0 * np.cos(theta_rad)
+vy = v0 * np.sin(theta_rad)
+t_meet = dx / vx if vx > 0 else float('inf')
+monkey_y_at_meet = target_height - 0.5 * gravity * t_meet**2
+t_monkey_ground = np.sqrt(2 * target_height / gravity)
+min_speed = np.hypot(dx, dy) / t_monkey_ground
+
+with st.expander("📐 Show the maths — how would you solve this on paper?"):
+    st.markdown(f"""
+#### Step 1 — Find the aim angle
+
+The hunter aims directly at the monkey, so we draw a right triangle:
+- Horizontal leg = distance − gun height offset = **{distance} − {gun_tip_x_m:.1f} = {dx:.1f} m**
+- Vertical leg = monkey height − gun height = **{target_height} − {gun_tip_y_m:.1f} = {dy:.1f} m**
+
+$$\\theta = \\arctan\\!\\left(\\frac{{{dy:.1f}}}{{{dx:.1f}}}\\right) = {theta_deg:.1f}°$$
+
+---
+
+#### Step 2 — Break the muzzle velocity into components
+
+$$v_x = v_0 \\cos\\theta = {v0} \\times \\cos({theta_deg:.1f}°) = {vx:.2f} \\text{{ m/s}}$$
+
+$$v_y = v_0 \\sin\\theta = {v0} \\times \\sin({theta_deg:.1f}°) = {vy:.2f} \\text{{ m/s}}$$
+
+---
+
+#### Step 3 — Write equations of motion
+
+**Bullet** (launched from gun tip at height {gun_tip_y_m:.1f} m):
+
+$$x_{{\\text{{bullet}}}}(t) = {gun_tip_x_m:.1f} + {vx:.2f}\\,t$$
+
+$$y_{{\\text{{bullet}}}}(t) = {gun_tip_y_m:.1f} + {vy:.2f}\\,t - \\tfrac{{1}}{{2}} \\times {gravity:.1f} \\times t^2$$
+
+**Monkey** (drops from rest at height {target_height} m):
+
+$$x_{{\\text{{monkey}}}}(t) = {distance} \\text{{ m (fixed)}}$$
+
+$$y_{{\\text{{monkey}}}}(t) = {target_height} - \\tfrac{{1}}{{2}} \\times {gravity:.1f} \\times t^2$$
+
+---
+
+#### Step 4 — Find when the bullet reaches the monkey's x position
+
+$$t_{{\\text{{meet}}}} = \\frac{{{dx:.1f}}}{{{vx:.2f}}} = {t_meet:.3f} \\text{{ s}}$$
+
+---
+
+#### Step 5 — Check both heights at t = {t_meet:.3f} s
+
+$$y_{{\\text{{bullet}}}} = {gun_tip_y_m:.1f} + {vy:.2f} \\times {t_meet:.3f} - \\tfrac{{1}}{{2}} \\times {gravity:.1f} \\times {t_meet:.3f}^2 = {gun_tip_y_m + vy*t_meet - 0.5*gravity*t_meet**2:.2f} \\text{{ m}}$$
+
+$$y_{{\\text{{monkey}}}} = {target_height} - \\tfrac{{1}}{{2}} \\times {gravity:.1f} \\times {t_meet:.3f}^2 = {monkey_y_at_meet:.2f} \\text{{ m}}$$
+
+{'✅ **Both heights match — the bullet hits the monkey!**' if abs(angle_offset_deg) == 0 else '⚠️ **Aim offset applied — heights no longer match, so this is a miss.**'}
+
+---
+
+#### Why does gravity cancel out?
+
+Notice that both equations contain **−½ × g × t²**. Since both objects experience
+the same gravitational acceleration from the same moment (t = 0), gravity affects
+them equally — it simply cancels out of the comparison. The bullet always hits,
+regardless of which planet you're on, as long as it reaches the monkey before
+either hits the ground.
+
+---
+
+#### Minimum speed to guarantee a hit
+
+The monkey hits the ground at:
+
+$$t_{{\\text{{ground}}}} = \\sqrt{{\\frac{{2 \\times {target_height}}}{{{gravity:.1f}}}}} = {t_monkey_ground:.3f} \\text{{ s}}$$
+
+The bullet must travel **{np.hypot(dx,dy):.1f} m** (straight-line distance) in less than that time:
+
+$$v_{{\\text{{min}}}} = \\frac{{{np.hypot(dx,dy):.1f}}}{{{t_monkey_ground:.3f}}} = {min_speed:.1f} \\text{{ m/s}}$$
+
+{'✅ Current speed **' + str(v0) + ' m/s** is fast enough.' if v0 >= min_speed else '⚠️ Current speed **' + str(v0) + ' m/s** is too slow — the monkey will hit the ground first!'}
+    """)
+
+# -----------------------------
 # Load monkey image (optional)
 # -----------------------------
 monkey_path = os.path.join("assets", "monkey.png")
@@ -241,7 +332,7 @@ def run_simulation():
     prev_my_m = float(target_height)
 
     min_dist_overall = 999.0   # track closest approach for close-call message
-    min_dist_time = 0.0         # time at which closest approach occurred
+    min_dist_time    = 0.0     # time at which closest approach occurred
 
     # Render a static first frame (scene before firing) so Streamlit is ready
     first_frame = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
@@ -337,7 +428,7 @@ def run_simulation():
         prev_mx_m = tx[i];      prev_my_m = ty[i]
         if min_dist < min_dist_overall:
             min_dist_overall = min_dist
-            min_dist_time = t_vals[i]
+            min_dist_time    = t_vals[i]
 
         if min_dist <= HIT_RADIUS:
             cv2.putText(frame, f"HIT!  t = {t_vals[i]:.2f} s",
@@ -386,8 +477,8 @@ if fire or replay:
 # -----------------------------
 st.markdown("""
 ---
-*This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
-I've always wanted to build one, but not having a big room and a complicated electromagnetic setup,
+*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG)
+and always wanted to build. Not having a big room and a complicated electromagnetic setup,
 I'm excited to be able to recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
 would have.*
