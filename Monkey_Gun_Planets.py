@@ -241,6 +241,7 @@ def run_simulation():
     prev_my_m = float(target_height)
 
     min_dist_overall = 999.0   # track closest approach for close-call message
+    min_dist_time = 0.0         # time at which closest approach occurred
 
     for i in range(len(t_vals)):
         frame_start = time.time()   # wall-clock start for this frame
@@ -322,7 +323,9 @@ def run_simulation():
             min_dist = np.hypot(rx0, ry0)
         prev_bx_m = bullet_x_m; prev_by_m = bullet_y_m
         prev_mx_m = tx[i];      prev_my_m = ty[i]
-        min_dist_overall = min(min_dist_overall, min_dist)
+        if min_dist < min_dist_overall:
+            min_dist_overall = min_dist
+            min_dist_time = t_vals[i]
 
         if min_dist <= HIT_RADIUS:
             cv2.putText(frame, f"HIT!  t = {t_vals[i]:.2f} s",
@@ -332,7 +335,7 @@ def run_simulation():
 
         if ty[i] <= 0 and not hit:
             close = min_dist_overall < 0.35
-            label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
+            label = (f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)"
                      if close else
                      f"MISS - monkey hit ground at t = {t_vals[i]:.2f} s")
             colour = (0, 140, 255) if close else (0, 0, 200)
@@ -343,7 +346,7 @@ def run_simulation():
         # py[i] < -0.01 (not <= 0) so t=0 starting position does not trigger this
         if py[i] < -0.01 and not hit:
             close = min_dist_overall < 0.35
-            label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
+            label = (f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)"
                      if close else
                      f"MISS - bullet hit ground at t = {t_vals[i]:.2f} s")
             colour = (0, 140, 255) if close else (0, 0, 200)
