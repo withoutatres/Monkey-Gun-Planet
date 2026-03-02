@@ -346,8 +346,8 @@ def run_simulation():
             canvas.image(frame, channels="BGR")
             break
 
-        # py[i] < -0.01 (not <= 0) so t=0 starting position does not trigger this
-        if py[i] < -0.01 and not hit:
+        # Use absolute bullet y (gun_tip_y_m + py[i]) so we track all the way to ground
+        if (gun_tip_y_m + py[i]) < 0 and not hit:
             close = min_dist_overall < 0.35
             label = (f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)"
                      if close else
@@ -378,7 +378,7 @@ if fire or replay:
 st.markdown("""
 ---
 *This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
-I've always wanted to build, but not having a big room and a complicated electromagnetic setup,
+I've always wanted to build one, but not having a big room and a complicated electromagnetic setup,
 I'm excited to be able to recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
 would have.*
