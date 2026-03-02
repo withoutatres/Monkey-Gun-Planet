@@ -17,13 +17,22 @@ He thinks to himself - if I let go as soon as the hunter fires, I'll drop safely
 Will his plan work?
 """)
 
-st.markdown("""
----
-*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG) and always wanted to build. 
-Not having a big room and a complicated electromagnetic setup, I'm excited to be able to 
-recreate and share it virtually — and enhance it to show the differences that running the 
-experiment on different planets (if it were possible to do so) would have.*
-""")
+with st.expander("ℹ️ How to use this simulation"):
+    st.markdown("""
+    Use the **sidebar** (tap **>** on mobile) to adjust the parameters, then press **Fire!**
+
+    - **Projectile speed** — how fast the bullet travels
+    - **Target height** — how high up the monkey is
+    - **Distance to target** — how far away the monkey is
+    - **Frames per second** — animation smoothness
+    - **Playback speed** — slow down to see the physics in action (try 10–25%)
+    - **Aim offset** — fire above or below the monkey to see what happens
+    - **Planet** — change gravity to see how it affects the outcome
+
+    *Tip: the hunter always aims directly at the monkey. Try different aim offsets
+    and planets to explore the physics.*
+    """)
+
 # -----------------------------
 # Constants
 # -----------------------------
@@ -39,7 +48,7 @@ v0             = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height  = st.sidebar.slider("Target height (m)", 1, 15, 10)
 distance       = st.sidebar.slider("Distance to target (m)", 5, 20, 15)
 fps            = st.sidebar.slider("Frames per second", 10, 60, 30)
-playback_pct = st.sidebar.slider(
+playback_pct   = st.sidebar.slider(
     "Playback speed (%)", min_value=5, max_value=100, value=100, step=5,
     format="%d%%"
 )
@@ -60,6 +69,11 @@ gravities = {
 }
 planet  = st.sidebar.selectbox("Planet / Moon", list(gravities.keys()), index=2)
 gravity = gravities[planet]
+
+st.sidebar.markdown("""
+---
+*On mobile, tap **>** at the top left to open the sidebar.*
+""")
 
 fire   = st.button("Fire!")
 replay = st.button("Replay")
@@ -208,7 +222,7 @@ def run_simulation():
     monkey_start_cx = int(distance * SCALE)
     monkey_start_cy = HEIGHT - int(target_height * SCALE)
 
-    # Aim-line fades over first 0.5 s of playback
+    # Aim-line fade setup (currently always visible — see comment below)
     aim_fade_frames = int(0.5 * fps / playback_speed)
 
     # Persistent trajectory layer - dots stamped here are never faded
@@ -254,8 +268,10 @@ def run_simulation():
         # ── Shooter ───────────────────────────────────────────────────
         draw_shooter(frame, shooter_px, shooter_py)
 
-        # ── Aim line: dashed, fades out after 0.5 s ───────────────────
-        if True:  # aim line always visible (comment out fade by setting i < aim_fade_frames)
+        # ── Aim line: dashed, always visible
+        # To restore fade: change 'if True' to 'if i < aim_fade_frames'
+        #                  and change 'alpha = 1.0' to 'alpha = 1.0 - (i / aim_fade_frames)'
+        if True:
             alpha    = 1.0
             colour   = (int(180 * alpha),) * 3
             x0, y0   = gun_tip_px, gun_tip_py
@@ -319,3 +335,15 @@ def run_simulation():
 # -----------------------------
 if fire or replay:
     run_simulation()
+
+# -----------------------------
+# Footer
+# -----------------------------
+st.markdown("""
+---
+*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG)
+and always wanted to build. Not having a big room and a complicated electromagnetic setup,
+I'm excited to be able to recreate and share it virtually — and enhance it to show the
+differences that running the experiment on different planets (if it were possible to do so)
+would have.*
+""")
