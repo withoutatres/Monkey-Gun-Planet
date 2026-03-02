@@ -38,7 +38,7 @@ with st.expander("ℹ️ How to use this simulation"):
 # -----------------------------
 WIDTH, HEIGHT = 600, 400
 SCALE = 25          # pixels per metre
-HIT_RADIUS = 0.05   # metres
+HIT_RADIUS = 0.5   # metres
 
 # -----------------------------
 # Sidebar controls
@@ -240,6 +240,8 @@ def run_simulation():
     prev_mx_m = float(distance)
     prev_my_m = float(target_height)
 
+    min_dist_overall = 999.0   # track closest approach for close-call message
+
     for i in range(len(t_vals)):
         frame_start = time.time()   # wall-clock start for this frame
 
@@ -320,6 +322,7 @@ def run_simulation():
             min_dist = np.hypot(rx0, ry0)
         prev_bx_m = bullet_x_m; prev_by_m = bullet_y_m
         prev_mx_m = tx[i];      prev_my_m = ty[i]
+        min_dist_overall = min(min_dist_overall, min_dist)
 
         if min_dist <= HIT_RADIUS:
             cv2.putText(frame, f"HIT!  t = {t_vals[i]:.2f} s",
@@ -328,15 +331,23 @@ def run_simulation():
             break
 
         if ty[i] <= 0 and not hit:
-            cv2.putText(frame, f"MISS - monkey hit ground at t = {t_vals[i]:.2f} s",
-                        (60, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 200), 2)
+            close = min_dist_overall < 0.2
+            label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
+                     if close else
+                     f"MISS - monkey hit ground at t = {t_vals[i]:.2f} s")
+            colour = (0, 140, 255) if close else (0, 0, 200)
+            cv2.putText(frame, label, (30, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.7, colour, 2)
             canvas.image(frame, channels="BGR")
             break
 
         # py[i] < -0.01 (not <= 0) so t=0 starting position does not trigger this
         if py[i] < -0.01 and not hit:
-            cv2.putText(frame, f"MISS - bullet hit ground at t = {t_vals[i]:.2f} s",
-                        (60, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 200), 2)
+            close = min_dist_overall < 0.2
+            label = (f"CLOSE CALL!  t = {t_vals[i]:.2f} s  (missed by {min_dist_overall:.2f} m)"
+                     if close else
+                     f"MISS - bullet hit ground at t = {t_vals[i]:.2f} s")
+            colour = (0, 140, 255) if close else (0, 0, 200)
+            cv2.putText(frame, label, (30, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.7, colour, 2)
             canvas.image(frame, channels="BGR")
             break
 
@@ -360,8 +371,8 @@ if fire or replay:
 st.markdown("""
 ---
 *This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
-It's one I always wanted to build, but not having a big room and a complicated electromagnetic setup,
-I'm excited to be able to finally recreate and share it virtually — and enhance it to show the
+I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
+I'm excited to be able to recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
 would have.*
 """)
