@@ -243,6 +243,9 @@ def run_simulation():
     min_dist_overall = 999.0   # track closest approach for close-call message
     min_dist_time = 0.0         # time at which closest approach occurred
 
+    # Brief pause so Streamlit finishes rendering the page before animation starts
+    time.sleep(0.3)
+
     for i in range(len(t_vals)):
         frame_start = time.time()   # wall-clock start for this frame
 
@@ -355,7 +358,8 @@ def run_simulation():
             break
 
         # Wall-clock timing: sleep only what remains after render overhead
-        frame_deadline = frame_start + (dt / playback_speed)
+        # Enforce minimum 50ms per frame so Streamlit always renders visibly
+        frame_deadline = frame_start + max(dt / playback_speed, 0.05)
         canvas.image(frame, channels="BGR")
         remaining = frame_deadline - time.time()
         if remaining > 0:
@@ -374,7 +378,7 @@ if fire or replay:
 st.markdown("""
 ---
 *This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
-I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
+I've always wanted to build, but not having a big room and a complicated electromagnetic setup,
 I'm excited to be able to recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
 would have.*
