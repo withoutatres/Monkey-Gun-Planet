@@ -38,7 +38,7 @@ with st.expander("ℹ️ How to use this simulation"):
 # -----------------------------
 WIDTH, HEIGHT = 600, 400
 SCALE = 25          # pixels per metre
-HIT_RADIUS = 0.5   # metres
+HIT_RADIUS = 0.05  # metres (tight so any aim offset causes a miss)
 
 # -----------------------------
 # Sidebar controls
