@@ -92,9 +92,9 @@ vy = v0 * np.sin(theta_rad)
 t_meet = dx / vx if vx > 0 else float('inf')
 monkey_y_at_meet = target_height - 0.5 * gravity * t_meet**2
 t_monkey_ground = np.sqrt(2 * target_height / gravity)
-min_speed = np.hypot(dx, dy) / t_monkey_ground
+min_speed = (dx / t_monkey_ground) / np.cos(theta_rad)
 
-with st.expander("📐 Show the math — how would you solve this on paper?"):
+with st.expander("📐 Show the maths — how would you solve this on paper?"):
     st.markdown(f"""
 #### Step 1 — Find the aim angle
 
@@ -162,9 +162,9 @@ The monkey hits the ground at:
 
 $$t_{{\\text{{ground}}}} = \\sqrt{{\\frac{{2 \\times {target_height}}}{{{gravity:.1f}}}}} = {t_monkey_ground:.3f} \\text{{ s}}$$
 
-The bullet must travel **{np.hypot(dx,dy):.1f} m** (straight-line distance) in less than that time:
+The bullet must cover the horizontal distance **{dx:.1f} m** in less than that time:
 
-$$v_{{\\text{{min}}}} = \\frac{{{np.hypot(dx,dy):.1f}}}{{{t_monkey_ground:.3f}}} = {min_speed:.1f} \\text{{ m/s}}$$
+$$v_{{\\text{{min}}}} = \\frac{{{dx:.1f} / {t_monkey_ground:.3f}}}{{\\cos({theta_deg:.1f}°)}} = {min_speed:.1f} \\text{{ m/s}}$$
 
 {'✅ Current speed **' + str(v0) + ' m/s** is fast enough.' if v0 >= min_speed else '⚠️ Current speed **' + str(v0) + ' m/s** is too slow — the monkey will hit the ground first!'}
     """)
