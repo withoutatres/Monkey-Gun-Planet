@@ -248,8 +248,8 @@ def run_simulation():
         draw_shooter(frame, shooter_px, shooter_py)
 
         # ── Aim line: dashed, fades out after 0.5 s ───────────────────
-        if i < aim_fade_frames:
-            alpha    = 1.0 - (i / aim_fade_frames)
+        if True:  # aim line always visible (comment out fade by setting i < aim_fade_frames)
+            alpha    = 1.0
             colour   = (int(180 * alpha),) * 3
             x0, y0   = gun_tip_px, gun_tip_py
             x1d, y1d = monkey_start_cx, monkey_start_cy
