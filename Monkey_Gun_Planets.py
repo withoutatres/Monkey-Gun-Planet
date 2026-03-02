@@ -359,9 +359,9 @@ if fire or replay:
 # -----------------------------
 st.markdown("""
 ---
-*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG)
-and always wanted to build. Not having a big room and a complicated electromagnetic setup,
-I'm excited to be able to recreate and share it virtually — and enhance it to show the
+*This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
+It's one I always wanted to build, but not having a big room and a complicated electromagnetic setup,
+I'm excited to be able to finally recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
 would have.*
 """)
