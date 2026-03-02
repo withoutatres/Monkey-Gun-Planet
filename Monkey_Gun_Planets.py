@@ -243,8 +243,17 @@ def run_simulation():
     min_dist_overall = 999.0   # track closest approach for close-call message
     min_dist_time = 0.0         # time at which closest approach occurred
 
-    # Brief pause so Streamlit finishes rendering the page before animation starts
-    time.sleep(0.3)
+    # Render a static first frame (scene before firing) so Streamlit is ready
+    first_frame = np.ones((HEIGHT, WIDTH, 3), dtype=np.uint8) * 255
+    cv2.line(first_frame, (0, HEIGHT - 1), (WIDTH - 1, HEIGHT - 1), (80, 120, 40), 2)
+    cv2.line(first_frame,
+             (int(distance * SCALE) - 30, HEIGHT - int(target_height * SCALE)),
+             (int(distance * SCALE) + 30, HEIGHT - int(target_height * SCALE)),
+             (101, 67, 33), 3)
+    draw_shooter(first_frame, shooter_px, shooter_py)
+    overlay_monkey(first_frame, int(distance * SCALE), HEIGHT - int(target_height * SCALE))
+    canvas.image(first_frame, channels="BGR")
+    time.sleep(0.5)  # hold the static frame so Streamlit is fully ready before animating
 
     for i in range(len(t_vals)):
         frame_start = time.time()   # wall-clock start for this frame
@@ -358,8 +367,8 @@ def run_simulation():
             break
 
         # Wall-clock timing: sleep only what remains after render overhead
-        # Enforce minimum 50ms per frame so Streamlit always renders visibly
-        frame_deadline = frame_start + max(dt / playback_speed, 0.05)
+        # Enforce minimum 80ms per frame so Streamlit always renders visibly
+        frame_deadline = frame_start + max(dt / playback_speed, 0.08)
         canvas.image(frame, channels="BGR")
         remaining = frame_deadline - time.time()
         if remaining > 0:
