@@ -82,11 +82,11 @@ reaction_delay = 0.0
 
 if challenge_mode:
     reaction_delay = st.sidebar.slider(
-        "Monkey reaction (s)   < 0 = jumps early,  > 0 = hesitates",
+        "Monkey reaction (s)   < 0 = lets go early,  > 0 = hesitates",
         min_value=-0.20, max_value=0.30, value=0.20, step=0.05
     )
     if reaction_delay < 0:
-        st.sidebar.caption(f"🐵 Monkey jumps **{abs(reaction_delay):.2f}s early** — already falling when the shot is fired!")
+        st.sidebar.caption(f"🐵 Monkey lets go **{abs(reaction_delay):.2f}s early** — already falling when the shot is fired!")
     elif reaction_delay == 0.0:
         st.sidebar.caption("🐵 Monkey reacts instantly — same as normal mode")
     else:
