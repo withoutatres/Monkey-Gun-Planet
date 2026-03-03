@@ -155,6 +155,28 @@ if np.isfinite(_t_meet):
 else:
     _monkey_y_meet = target_height
 
+# Pre-build monkey equation to avoid LaTeX escaping issues inside f-string
+if reaction_delay == 0:
+    _monkey_eq = (
+        f"$$y_{{\\text{{monkey}}}}(t) = {target_height} - "
+        f"\\tfrac{{1}}{{2}} \\times {gravity:.1f}\\,t^2$$"
+    )
+elif reaction_delay > 0:
+    _monkey_eq = (
+        f"$$y_{{\\text{{monkey}}}}(t) = "
+        f"\\begin{{cases}} "
+        f"{target_height} & t < {reaction_delay:.2f} \\\\\\\\ "
+        f"{target_height} - \\tfrac{{1}}{{2}} \\times {gravity:.1f}(t - {reaction_delay:.2f})^2 "
+        f"& t \\geq {reaction_delay:.2f} "
+        f"\\end{{cases}}$$"
+    )
+else:
+    _monkey_eq = (
+        f"$$y_{{\\text{{monkey}}}}(t) = {target_height} - "
+        f"\\tfrac{{1}}{{2}} \\times {gravity:.1f}\\,"
+        f"(t + {abs(reaction_delay):.2f})^2$$"
+    )
+
 with st.expander("📐 Show the maths — how would you solve this on paper?"):
     _delay_label = (
         f"jumps **{abs(reaction_delay):.2f}s early**" if reaction_delay < 0
@@ -190,11 +212,7 @@ $$y_{{\\text{{bullet}}}}(t) = {_gy:.1f} + {_vy:.2f}\\,t - \\tfrac{{1}}{{2}} \\ti
 
 **Monkey** ({_delay_label}, starting at {target_height} m):
 
-{(f"$$y_{{\\\\text{{monkey}}}}(t) = {target_height} - \\\\tfrac{{1}}{{2}} \\\\times {gravity:.1f}\\\\,t^2$$"
-  if reaction_delay == 0 else
-  f"$$y_{{\\\\text{{monkey}}}}(t) = \\\\begin{{cases}} {target_height} & t < {reaction_delay:.2f}\\\\\\\\ {target_height} - \\\\tfrac{{1}}{{2}} \\\\times {gravity:.1f}(t-{reaction_delay:.2f})^2 & t \\\\geq {reaction_delay:.2f} \\\\end{{cases}}$$"
-  if reaction_delay > 0 else
-  f"$$y_{{\\\\text{{monkey}}}}(t) = {target_height} - \\\\tfrac{{1}}{{2}} \\\\times {gravity:.1f}\\\\,(t+{abs(reaction_delay):.2f})^2$$")}
+{_monkey_eq}
 
 ---
 
