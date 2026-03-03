@@ -177,7 +177,7 @@ else:
         f"(t + {abs(reaction_delay):.2f})^2$$"
     )
 
-with st.expander("📐 Show the maths — how would you solve this on paper?"):
+with st.expander("📐 Show your work - how would you solve this on paper?"):
     _delay_label = (
         f"jumps **{abs(reaction_delay):.2f}s early**" if reaction_delay < 0
         else ("reacts **instantly**" if reaction_delay == 0
@@ -493,7 +493,7 @@ def run_simulation(canvas=None):
                 cv2.putText(frame, f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)",
                             (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             else:
-                cv2.putText(frame, f":( MISS — monkey hit ground at t = {t_vals[i]:.2f} s",
+                cv2.putText(frame, f"MISS :( - monkey hit ground at t = {t_vals[i]:.2f} s",
                             (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             if _aim_hint:
                 cv2.putText(frame, f"^ {_aim_hint}",
@@ -512,7 +512,7 @@ def run_simulation(canvas=None):
                 cv2.putText(frame, f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)",
                             (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             else:
-                cv2.putText(frame, f":( MISS — bullet hit ground at t = {t_vals[i]:.2f} s",
+                cv2.putText(frame, f"MISS :( - bullet hit ground at t = {t_vals[i]:.2f} s",
                             (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             if _aim_hint:
                 cv2.putText(frame, f"^ {_aim_hint}",
@@ -543,9 +543,9 @@ if st.session_state.get('run_sim', False):
 # -----------------------------
 st.markdown("""
 ---
-*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG)
-and always wanted to build. Not having a big room and a complicated electromagnetic setup,
-I'm excited to be able to recreate and share it virtually — and enhance it to show the
+*This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
+I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
+I'm excited to be able to recreate and share it virtually — and (a) enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
-would have.*
+would have and (b) add a challenge mode to add some variability (h/t Mike R. for that idea).*
 """)
