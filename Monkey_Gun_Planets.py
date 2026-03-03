@@ -21,14 +21,14 @@ with st.expander("ℹ️ How to use this simulation"):
     st.markdown("""
     Use the **sidebar** (tap **>** on mobile) to adjust the parameters, then press **Fire!**
 
-    - **Projectile speed** — how fast the projectile travels
+    - **Projectile speed** — how fast the bullet travels
     - **Target height** — how high up the monkey is
     - **Distance to target** — how far away the monkey is
     - **Frames per second** — animation smoothness
     - **Playback speed** — slow down to see the physics in action (try 10–25%)
     - **Aim offset** — fire above or below the monkey to see what happens
     - **Planet** — change gravity to see how it affects the outcome
-    - **Challenge mode 🎯** — give the monkey a "head start" or reaction delay and figure out
+    - **Challenge mode 🎯** — give the monkey a head start of reaction delay and figure out
       the correct aim offset to still make the hit!
 
     *Tip: the hunter always aims directly at the monkey. Try different aim offsets
@@ -56,7 +56,7 @@ playback_pct  = st.sidebar.slider(
     format="%d%%"
 )
 playback_speed   = playback_pct / 100.0
-angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -10.0, 10.0, 0.0, step=0.5)
+angle_offset_deg = st.sidebar.slider("Aim offset (degrees)", -10.0, 10.0, 0.0, step=0.25)
 
 gravities = {
     "Mercury (38%)":    3.7,
@@ -109,7 +109,8 @@ if challenge_mode:
         st.sidebar.markdown("---")
         st.sidebar.markdown("**🧩 Challenge:** adjust the *Aim offset* slider to compensate for the reaction delay, then press Fire!")
         if st.sidebar.checkbox("💡 Reveal answer"):
-            st.sidebar.success(f"Compensating aim offset: **{_offset_needed:+.1f}°**")
+            _hint_rounded = round(_offset_needed * 4) / 4
+            st.sidebar.success(f"Compensating aim offset: **{_hint_rounded:+.2f}°**")
         else:
             st.sidebar.caption("Check the box above to reveal the answer.")
     else:
@@ -177,7 +178,7 @@ else:
         f"(t + {abs(reaction_delay):.2f})^2$$"
     )
 
-with st.expander("📐 Show your work - how would you solve this on paper?"):
+with st.expander("📐 Show the maths — how would you solve this on paper?"):
     _delay_label = (
         f"jumps **{abs(reaction_delay):.2f}s early**" if reaction_delay < 0
         else ("reacts **instantly**" if reaction_delay == 0
@@ -545,7 +546,8 @@ st.markdown("""
 ---
 *This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
 I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
-I'm excited to be able to recreate and share it virtually — and (a) enhance it to show the
+I'm excited to be able to recreate and share it virtually — and enhance it to (a) show the
 differences that running the experiment on different planets (if it were possible to do so)
-would have and (b) add a challenge mode to add some variability (h/t Mike R. for that idea).*
+would have and (b) add a challenge mode to introduce some variability that allows some further
+experimentation (h/t Mike R. for the idea).*
 """)
