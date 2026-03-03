@@ -371,7 +371,7 @@ def run_simulation():
     draw_shooter(first_frame, shooter_px, shooter_py)
     overlay_monkey(first_frame, monkey_start_cx, monkey_start_cy)
     canvas.image(first_frame, channels="BGR")
-    time.sleep(0.5)
+    time.sleep(0.8)  # hold static frame — gives Streamlit time to settle
 
     for i in range(len(t_vals)):
         frame_start = time.time()
@@ -477,7 +477,7 @@ def run_simulation():
             break
 
         # Wall-clock timing — enforce 80ms minimum so frames are always visible
-        frame_deadline = frame_start + max(dt / playback_speed, 0.08)
+        frame_deadline = frame_start + max(dt / playback_speed, 0.10)
         canvas.image(frame, channels="BGR")
         remaining = frame_deadline - time.time()
         if remaining > 0:
@@ -495,9 +495,9 @@ if fire or replay:
 # -----------------------------
 st.markdown("""
 ---
-*This was inspired by my favorite high school physics demonstration (h/t Mr. John Balaban; AMDG).
-I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
-I'm excited to be able to recreate and share it virtually — and enhance it to (a) show the
+*This was inspired by a demonstration I first saw in high school (h/t Mr. John Balaban; AMDG)
+and always wanted to build. Not having a big room and a complicated electromagnetic setup,
+I'm excited to be able to recreate and share it virtually — and enhance it to show the
 differences that running the experiment on different planets (if it were possible to do so)
-would have and (b) adding a challenge mode.*
+would have.*
 """)
