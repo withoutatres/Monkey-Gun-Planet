@@ -178,7 +178,7 @@ else:
         f"(t + {abs(reaction_delay):.2f})^2$$"
     )
 
-with st.expander("📐 Show the maths — how would you solve this on paper?"):
+with st.expander("📐 Show your work — how would you solve this on paper?"):
     _delay_label = (
         f"jumps **{abs(reaction_delay):.2f}s early**" if reaction_delay < 0
         else ("reacts **instantly**" if reaction_delay == 0
