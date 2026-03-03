@@ -21,14 +21,14 @@ with st.expander("ℹ️ How to use this simulation"):
     st.markdown("""
     Use the **sidebar** (tap **>** on mobile) to adjust the parameters, then press **Fire!**
 
-    - **Projectile speed** — how fast the bullet travels
+    - **Projectile speed** — how fast the projectile travels
     - **Target height** — how high up the monkey is
     - **Distance to target** — how far away the monkey is
     - **Frames per second** — animation smoothness
     - **Playback speed** — slow down to see the physics in action (try 10–25%)
     - **Aim offset** — fire above or below the monkey to see what happens
     - **Planet** — change gravity to see how it affects the outcome
-    - **Challenge mode 🎯** — give the monkey a reaction delay and figure out
+    - **Challenge mode 🎯** — give the monkey a "head start" or reaction delay and figure out
       the correct aim offset to still make the hit!
 
     *Tip: the hunter always aims directly at the monkey. Try different aim offsets
