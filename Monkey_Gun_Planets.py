@@ -50,7 +50,7 @@ st.sidebar.header("Simulation Parameters")
 v0            = st.sidebar.slider("Projectile speed (m/s)", 5, 50, 20)
 target_height = st.sidebar.slider("Target height (m)", 1, 15, 10)
 distance      = st.sidebar.slider("Distance to target (m)", 5, 20, 15)
-fps           = st.sidebar.slider("Frames per second", 10, 60, 30)
+fps           = st.sidebar.slider("Frames per second", 10, 60, 24)
 playback_pct  = st.sidebar.slider(
     "Playback speed (%)", min_value=5, max_value=100, value=100, step=5,
     format="%d%%"
@@ -125,13 +125,8 @@ st.sidebar.markdown("""
 if 'run_sim' not in st.session_state:
     st.session_state.run_sim = False
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    if st.button("🔫 Fire!", use_container_width=True):
-        st.session_state.run_sim = True
-with col2:
-    if st.button("🔄 Replay", use_container_width=True):
-        st.session_state.run_sim = True
+if st.button("🔫 Fire! / Replay", use_container_width=False):
+    st.session_state.run_sim = True
 
 # -----------------------------
 # Worked math expander (live values)
@@ -486,7 +481,7 @@ def run_simulation(canvas=None):
             break
 
         # Wall-clock timing — enforce 80ms minimum so frames are always visible
-        frame_deadline = frame_start + max(dt / playback_speed, 0.12)
+        frame_deadline = frame_start + max(dt / playback_speed, 0.15)
         canvas.image(frame, channels="BGR")
         remaining = frame_deadline - time.time()
         if remaining > 0:
