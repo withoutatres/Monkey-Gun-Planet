@@ -484,16 +484,20 @@ def run_simulation(canvas=None):
 
         if ty[i] <= 0 and not hit:
             close = min_dist_overall < 0.35
-            # Work out aim direction feedback at closest approach time
             _idx = min(int(min_dist_time * fps), len(t_vals)-1)
             _by  = gun_tip_y_m + py[_idx]
             _my  = ty[_idx]
-            _aim_hint = (" — aim lower" if _by > _my else " — aim higher") if angle_offset_deg != 0 or challenge_mode else ""
-            label = (f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m){_aim_hint}"
-                     if close else
-                     f"MISS — monkey hit ground at t = {t_vals[i]:.2f} s{_aim_hint}")
+            _aim_hint = ("aim lower" if _by > _my else "aim higher") if angle_offset_deg != 0 or challenge_mode else ""
             col = (0, 140, 255) if close else (0, 0, 200)
-            cv2.putText(frame, label, (10, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            if close:
+                cv2.putText(frame, f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)",
+                            (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            else:
+                cv2.putText(frame, f":( MISS — monkey hit ground at t = {t_vals[i]:.2f} s",
+                            (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            if _aim_hint:
+                cv2.putText(frame, f"^ {_aim_hint}",
+                            (10, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             canvas.image(frame, channels="BGR")
             break
 
@@ -502,12 +506,17 @@ def run_simulation(canvas=None):
             _idx = min(int(min_dist_time * fps), len(t_vals)-1)
             _by  = gun_tip_y_m + py[_idx]
             _my  = ty[_idx]
-            _aim_hint = (" — aim lower" if _by > _my else " — aim higher") if angle_offset_deg != 0 or challenge_mode else ""
-            label = (f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m){_aim_hint}"
-                     if close else
-                     f"MISS — bullet hit ground at t = {t_vals[i]:.2f} s{_aim_hint}")
+            _aim_hint = ("aim lower" if _by > _my else "aim higher") if angle_offset_deg != 0 or challenge_mode else ""
             col = (0, 140, 255) if close else (0, 0, 200)
-            cv2.putText(frame, label, (10, 55), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            if close:
+                cv2.putText(frame, f"CLOSE CALL!  t = {min_dist_time:.2f} s  (missed by {min_dist_overall:.2f} m)",
+                            (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            else:
+                cv2.putText(frame, f":( MISS — bullet hit ground at t = {t_vals[i]:.2f} s",
+                            (10, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            if _aim_hint:
+                cv2.putText(frame, f"^ {_aim_hint}",
+                            (10, 72), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             canvas.image(frame, channels="BGR")
             break
 
