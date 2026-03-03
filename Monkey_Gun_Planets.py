@@ -122,8 +122,16 @@ st.sidebar.markdown("""
 *On mobile, tap **>** at the top left to open the sidebar.*
 """)
 
-fire   = st.button("Fire!")
-replay = st.button("Replay")
+if 'run_sim' not in st.session_state:
+    st.session_state.run_sim = False
+
+col1, col2 = st.columns([1, 1])
+with col1:
+    if st.button("🔫 Fire!", use_container_width=True):
+        st.session_state.run_sim = True
+with col2:
+    if st.button("🔄 Replay", use_container_width=True):
+        st.session_state.run_sim = True
 
 # -----------------------------
 # Worked math expander (live values)
@@ -328,7 +336,7 @@ def simulate_positions(v0, target_height, distance, g, dt,
 # -----------------------------
 # Simulation renderer
 # -----------------------------
-def run_simulation():
+def run_simulation(canvas=None):
     dt = 1.0 / fps
 
     shooter_px = 0
@@ -344,7 +352,8 @@ def run_simulation():
         reaction_delay=reaction_delay
     )
 
-    canvas = st.empty()
+    if canvas is None:
+        canvas = st.empty()
     hit    = False
 
     branch_y_px    = HEIGHT - int(target_height * SCALE)
@@ -371,7 +380,7 @@ def run_simulation():
     draw_shooter(first_frame, shooter_px, shooter_py)
     overlay_monkey(first_frame, monkey_start_cx, monkey_start_cy)
     canvas.image(first_frame, channels="BGR")
-    time.sleep(0.8)  # hold static frame — gives Streamlit time to settle
+    time.sleep(1.0)  # hold static frame — gives Streamlit time to settle
 
     for i in range(len(t_vals)):
         frame_start = time.time()
@@ -477,7 +486,7 @@ def run_simulation():
             break
 
         # Wall-clock timing — enforce 80ms minimum so frames are always visible
-        frame_deadline = frame_start + max(dt / playback_speed, 0.10)
+        frame_deadline = frame_start + max(dt / playback_speed, 0.12)
         canvas.image(frame, channels="BGR")
         remaining = frame_deadline - time.time()
         if remaining > 0:
@@ -487,8 +496,12 @@ def run_simulation():
 # -----------------------------
 # Entry point
 # -----------------------------
-if fire or replay:
-    run_simulation()
+# Canvas placeholder created at top level so Streamlit never loses it
+canvas_placeholder = st.empty()
+
+if st.session_state.get('run_sim', False):
+    st.session_state.run_sim = False
+    run_simulation(canvas_placeholder)
 
 # -----------------------------
 # Footer
