@@ -548,6 +548,6 @@ st.markdown("""
 I always wanted to build one, but not having a big room and a complicated electromagnetic setup,
 I'm excited to be able to recreate and share it virtually — and enhance it to (a) show the
 differences that running the experiment on different planets (if it were possible to do so)
-would have and (b) add a challenge mode to introduce some variability that allows some further
+would have and (b) add a challenge mode to introduce some variability that allows further
 experimentation (h/t Mike R. for the idea).*
 """)
