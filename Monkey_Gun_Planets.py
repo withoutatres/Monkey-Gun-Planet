@@ -28,7 +28,7 @@ with st.expander("ℹ️ How to use this simulation"):
     - **Playback speed** — slow down to see the physics in action (try 10–25%)
     - **Aim offset** — fire above or below the monkey to see what happens
     - **Planet** — change gravity to see how it affects the outcome
-    - **Challenge mode 🎯** — give the monkey a head start of reaction delay and figure out
+    - **Challenge mode 🎯** — give the monkey a head start or reaction delay and figure out
       the correct aim offset to still make the hit!
 
     *Tip: the hunter always aims directly at the monkey. Try different aim offsets
@@ -82,7 +82,7 @@ reaction_delay = 0.0
 
 if challenge_mode:
     reaction_delay = st.sidebar.slider(
-        "Monkey reaction (s)   < 0 = lets go early,  > 0 = hesitates",
+        "Monkey reaction (s)   < 0 = jumps early,  > 0 = hesitates",
         min_value=-0.20, max_value=0.30, value=0.20, step=0.05
     )
     if reaction_delay < 0:
@@ -316,7 +316,7 @@ def simulate_positions(v0, target_height, distance, g, dt,
                         reaction_delay=0.0):
     """
     reaction_delay > 0 : monkey hesitates, starts falling at t = delay
-    reaction_delay < 0 : monkey jumps early, already falling |delay| s before t=0
+    reaction_delay < 0 : monkey lets go early, already falling |delay| s before t=0
     reaction_delay = 0 : instant reaction (standard case)
     """
     dx_to_monkey = distance      - origin_x_m
@@ -485,9 +485,12 @@ def run_simulation(canvas=None):
 
         if ty[i] <= 0 and not hit:
             close = min_dist_overall < 0.35
-            _idx = min(int(min_dist_time * fps), len(t_vals)-1)
-            _by  = gun_tip_y_m + py[_idx]
-            _my  = ty[_idx]
+            # Find frame where bullet x is closest to monkey x — that's where
+            # we compare heights, not the min-distance frame which can be spurious
+            _bullet_xs = gun_tip_x_m + px[:i+1]
+            _x_idx = int(np.argmin(np.abs(_bullet_xs - distance)))
+            _by  = gun_tip_y_m + py[_x_idx]
+            _my  = ty[_x_idx]
             _aim_hint = ("aim lower" if _by > _my else "aim higher") if angle_offset_deg != 0 or challenge_mode else ""
             col = (0, 140, 255) if close else (0, 0, 200)
             if close:
@@ -504,9 +507,10 @@ def run_simulation(canvas=None):
 
         if (gun_tip_y_m + py[i]) < 0 and not hit:
             close = min_dist_overall < 0.35
-            _idx = min(int(min_dist_time * fps), len(t_vals)-1)
-            _by  = gun_tip_y_m + py[_idx]
-            _my  = ty[_idx]
+            _bullet_xs = gun_tip_x_m + px[:i+1]
+            _x_idx = int(np.argmin(np.abs(_bullet_xs - distance)))
+            _by  = gun_tip_y_m + py[_x_idx]
+            _my  = ty[_x_idx]
             _aim_hint = ("aim lower" if _by > _my else "aim higher") if angle_offset_deg != 0 or challenge_mode else ""
             col = (0, 140, 255) if close else (0, 0, 200)
             if close:
